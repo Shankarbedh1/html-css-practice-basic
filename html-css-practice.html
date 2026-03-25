@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML & CSS Practice Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Clash+Display:wght@600;700&family=Satoshi:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e14;
+  --surface: #16161f;
+  --card: #1d1d2a;
+  --border: #2c2c3e;
+  --border2: #3a3a50;
+  --accent: #e8fb61;
+  --accent-dim: rgba(232,251,97,0.12);
+  --blue: #61c3fb;
+  --blue-dim: rgba(97,195,251,0.1);
+  --green: #61fbaa;
+  --green-dim: rgba(97,251,170,0.1);
+  --red: #fb6161;
+  --red-dim: rgba(251,97,97,0.1);
+  --text: #ddddf0;
+  --muted: #6b6b88;
+  --muted2: #9898b0;
+  --editor-bg: #0a0a10;
+}
+
+body {
+  font-family: 'Satoshi', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.challenge-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  justify-content: center;
+}
+.challenge-tabs::-webkit-scrollbar { display: none; }
+
+.ctab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted2);
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s;
+}
+.ctab:hover { background: var(--card); color: var(--text); border-color: var(--border); }
+.ctab.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: rgba(232,251,97,0.35);
+}
+.ctab .diff {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.diff.easy { background: rgba(97,251,170,0.15); color: var(--green); }
+.diff.medium { background: rgba(97,195,251,0.15); color: var(--blue); }
+.diff.hard { background: rgba(251,97,97,0.15); color: var(--red); }
+
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+.btn-ghost { background: transparent; color: var(--muted2); }
+.btn-ghost:hover { background: var(--card); color: var(--text); }
+.btn-accent { background: var(--accent); color: #0e0e14; border-color: var(--accent); }
+.btn-accent:hover { background: #f5ff80; }
+.btn-blue { background: var(--blue-dim); color: var(--blue); border-color: rgba(97,195,251,0.3); }
+.btn-blue:hover { background: rgba(97,195,251,0.2); }
+
+/* ── MAIN LAYOUT ── */
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+.panel:last-child { border-right: none; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 42px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.label-target { color: var(--blue); }
+.label-code { color: var(--accent); }
+.label-output { color: var(--green); }
+
+.panel-body { flex: 1; overflow: hidden; position: relative; }
+
+/* ── TARGET PANEL ── */
+.target-body {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.target-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+  display: block;
+}
+
+/* ── EDITOR PANEL ── */
+.editor-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.etab {
+  padding: 8px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.etab:hover { color: var(--text); }
+.etab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-dim); }
+
+.editor-wrap { flex: 1; position: relative; overflow: hidden; }
+.code-editor {
+  width: 100%;
+  height: 100%;
+  background: var(--editor-bg);
+  color: #c8d3e8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 16px;
+  border: none;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  overflow: auto;
+}
+.code-editor::placeholder { color: #3a3a52; }
+
+/* syntax-like coloring via textarea — we'll use a custom highlight overlay */
+.editor-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── OUTPUT PANEL ── */
+#outputFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}
+
+/* ── BOTTOM BAR ── */
+.bottombar {
+  height: 48px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hint-text strong { color: var(--blue); }
+
+.score-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted2);
+}
+.score-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── RESULT TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green); color: #0a1f14; }
+.toast.error { background: var(--red); color: #1f0a0a; }
+.toast.info { background: var(--blue); color: #0a141f; }
+
+/* ── HINT PANEL ── */
+.hint-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,10,16,0.96);
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+  z-index: 10;
+  overflow-y: auto;
+}
+.hint-overlay.show { display: flex; }
+.hint-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+.hint-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted2);
+}
+.hint-item::before {
+  content: '→';
+  color: var(--accent);
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+code {
+  background: var(--card);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--blue);
+}
+
+/* ── COMPARE overlay ── */
+.compare-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--border);
+  z-index: 5;
+}
+.compare-bar .bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">&lt;/practice&gt;</div>
+  <div class="challenge-tabs" id="challengeTabs"></div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" onclick="toggleHint()">💡 Hint</button>
+    <button class="btn btn-blue" onclick="resetCode()">↺ Reset</button>
+    <button class="btn btn-accent" onclick="checkAnswer()">▶ Run & Check</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- TARGET -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-label label-target">🎯 Target Design</span>
+      <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">match this</span>
+    </div>
+    <div class="panel-body">
+      <iframe id="targetFrame" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="panel" style="flex-direction:column;display:flex;position:relative">
+    <div class="panel-header">
+      <span class="panel-label label-code">✏️ Your Code</span>
+    </div>
+    <div class="editor-tabs" id="editorTabs">
+      <div class="etab active" onclick="switchTab('html')">HTML</div>
+      <div class="etab" onclick="switchTab('css')">CSS</div>
+    </div>
+    <div class="editor-container">
+      <textarea class="code-editor" id="htmlEditor" placeholder="<!-- write your HTML here -->&#10;&#10;"></textarea>
+      <textarea class="code-editor" id="cssEditor" placeholder="/* write your CSS here */" style="display:none"></textarea>
+    </div>
+    <!-- Hint overlay -->
+    <div class="hint-overlay" id="hintOverlay">
+      <div class="hint-title">💡 HINTS FOR THIS CHALLENGE</div>
+      <div id="hintList"></div>
+      <button class="btn btn-ghost" style="margin-top:auto;align-self:flex-start" onclick="toggleHint()">✕ Close</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel" style="position:relative">
+    <div class="panel-header">
+      <span class="panel-label label-output">⚡ Your Output</span>
+      <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace" id="matchPct">—</span>
+    </div>
+    <div class="compare-bar"><div class="bar-fill" id="matchBar" style="width:0%"></div></div>
+    <div class="panel-body">
+      <iframe id="outputFrame" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <div class="hint-text" id="hintBar">Select a challenge above and start coding. Press <strong>Run & Check</strong> to see how close you are!</div>
+  <div class="score-display">
+    Score: <span class="score-val" id="scoreVal">0</span>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const challenges = [
+  {
+    id: 'button',
+    name: 'Glow Button',
+    difficulty: 'easy',
+    hint: [
+      'Use <code>padding</code> to give the button size',
+      'Use <code>background-color</code> and <code>color</code> for styling',
+      'Use <code>border-radius: 8px</code> for rounded corners',
+      'Use <code>box-shadow</code> to create the glow effect',
+      'Use <code>cursor: pointer</code> so it looks clickable',
+      'Center it with <code>display:flex; justify-content:center; align-items:center; height:100vh</code> on body',
+    ],
+    bottomHint: 'Style a button with background color, padding, border-radius and a glowing box-shadow',
+    target: `<!DOCTYPE html><html><head><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0e0e14; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+      .btn { background: #e8fb61; color: #0e0e14; padding: 14px 36px; font-size: 16px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 0 24px rgba(232,251,97,0.5); letter-spacing: 0.5px; }
+      .btn:hover { background: #f5ff80; box-shadow: 0 0 40px rgba(232,251,97,0.7); }
+    </style></head><body><button class="btn">Click Me</button></body></html>`,
+    starterHTML: `<button class="btn">Click Me</button>`,
+    starterCSS: `/* Style the button below */\n\nbody {\n  background: #0e0e14;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  height: 100vh;\n}\n\n.btn {\n  /* add your styles here */\n}`,
+  },
+  {
+    id: 'card',
+    name: 'Profile Card',
+    difficulty: 'easy',
+    hint: [
+      'Create a <code>div.card</code> with a fixed width like <code>280px</code>',
+      'Use <code>border-radius: 16px</code> for rounded card corners',
+      'Use <code>background: #1d1d2a</code> for the dark card background',
+      'Use an <code>img</code> tag with <code>border-radius: 50%</code> for circular avatar',
+      'Use <code>text-align: center</code> to center all content',
+      'Use <code>padding: 32px</code> inside the card for spacing',
+    ],
+    bottomHint: 'Build a centered profile card with avatar, name, role and a follow button',
+    target: `<!DOCTYPE html><html><head><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0e0e14; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
+      .card { background: #1d1d2a; border: 1px solid #2c2c3e; border-radius: 16px; padding: 32px; width: 280px; text-align: center; }
+      .avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #61c3fb, #e8fb61); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+      .name { color: #ddddf0; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+      .role { color: #6b6b88; font-size: 13px; margin-bottom: 24px; }
+      .follow-btn { background: #61c3fb; color: #0e0e14; padding: 10px 32px; border: none; border-radius: 50px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; }
+    </style></head><body>
+    <div class="card">
+      <div class="avatar">👨‍💻</div>
+      <div class="name">Rahul Sharma</div>
+      <div class="role">Frontend Developer</div>
+      <button class="follow-btn">Follow</button>
+    </div>
+    </body></html>`,
+    starterHTML: `<div class="card">\n  <div class="avatar">👨‍💻</div>\n  <div class="name">Rahul Sharma</div>\n  <div class="role">Frontend Developer</div>\n  <button class="follow-btn">Follow</button>\n</div>`,
+    starterCSS: `body {\n  background: #0e0e14;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  min-height: 100vh;\n  font-family: sans-serif;\n}\n\n.card {\n  /* style the card */\n}\n\n.avatar {\n  /* circular avatar */\n}\n\n.name {\n  /* name text */\n}\n\n.role {\n  /* muted role */\n}\n\n.follow-btn {\n  /* blue button */\n}`,
+  },
+  {
+    id: 'navbar',
+    name: 'Navbar',
+    difficulty: 'easy',
+    hint: [
+      'Use <code>display: flex</code> on the nav to lay items horizontally',
+      'Use <code>justify-content: space-between</code> to push logo left and links right',
+      'Use <code>align-items: center</code> to vertically center everything',
+      'Add <code>padding: 0 32px</code> and <code>height: 60px</code> to the navbar',
+      'Use <code>gap: 24px</code> on the links container',
+      'Use <code>text-decoration: none</code> to remove underlines from links',
+    ],
+    bottomHint: 'Build a fixed navbar with a logo on the left and navigation links on the right',
+    target: `<!DOCTYPE html><html><head><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: sans-serif; background: #0e0e14; color: #ddddf0; }
+      nav { background: #16161f; border-bottom: 1px solid #2c2c3e; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; position: sticky; top: 0; }
+      .logo { font-weight: 800; font-size: 18px; color: #e8fb61; letter-spacing: -0.5px; }
+      .links { display: flex; gap: 28px; list-style: none; }
+      .links a { color: #9898b0; text-decoration: none; font-size: 14px; font-weight: 500; }
+      .links a:hover { color: #ddddf0; }
+      .links a.active { color: #e8fb61; }
+      .cta { background: #e8fb61; color: #0e0e14; padding: 8px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; }
+    </style></head><body>
+    <nav>
+      <div class="logo">DevSpace</div>
+      <ul class="links">
+        <li><a href="#" class="active">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Projects</a></li>
+        <li><a href="#">Blog</a></li>
+      </ul>
+      <a href="#" class="cta">Get Started</a>
+    </nav>
+    </body></html>`,
+    starterHTML: `<nav>\n  <div class="logo">DevSpace</div>\n  <ul class="links">\n    <li><a href="#" class="active">Home</a></li>\n    <li><a href="#">About</a></li>\n    <li><a href="#">Projects</a></li>\n    <li><a href="#">Blog</a></li>\n  </ul>\n  <a href="#" class="cta">Get Started</a>\n</nav>`,
+    starterCSS: `body {\n  font-family: sans-serif;\n  background: #0e0e14;\n  color: #ddddf0;\n}\n\nnav {\n  /* flex navbar */\n}\n\n.logo {\n  /* bold yellow logo */\n}\n\n.links {\n  /* horizontal list */\n}\n\n.links a {\n  /* link styles */\n}\n\n.cta {\n  /* yellow button */\n}`,
+  },
+  {
+    id: 'pricing',
+    name: 'Pricing Card',
+    difficulty: 'medium',
+    hint: [
+      'Use <code>display: flex; gap: 20px</code> on the wrapper to show cards side by side',
+      'Make the "Pro" card stand out with <code>border-color: #e8fb61</code>',
+      'Use <code>flex-direction: column</code> inside each card',
+      'List items with <code>list-style: none</code> and a custom ✓ using <code>::before</code>',
+      'Use <code>margin-top: auto</code> on the button to push it to the bottom',
+      'Add a "Popular" badge with <code>position: absolute</code> on the card',
+    ],
+    bottomHint: 'Build 3 pricing cards: Free, Pro (highlighted), and Team side by side',
+    target: `<!DOCTYPE html><html><head><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0e0e14; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; padding: 24px; }
+      .cards { display: flex; gap: 20px; align-items: center; }
+      .card { background: #1d1d2a; border: 1px solid #2c2c3e; border-radius: 16px; padding: 28px; width: 220px; display: flex; flex-direction: column; gap: 16px; position: relative; }
+      .card.featured { border-color: #e8fb61; transform: scale(1.05); }
+      .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #e8fb61; color: #0e0e14; font-size: 10px; font-weight: 800; padding: 3px 14px; border-radius: 20px; letter-spacing: 1px; white-space: nowrap; }
+      .plan { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #6b6b88; text-transform: uppercase; }
+      .price { font-size: 36px; font-weight: 800; color: #ddddf0; }
+      .price span { font-size: 14px; color: #6b6b88; font-weight: 400; }
+      .features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+      .features li { font-size: 13px; color: #9898b0; display: flex; align-items: center; gap: 8px; }
+      .features li::before { content: '✓'; color: #61fbaa; font-weight: 700; }
+      .btn { padding: 11px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; border: none; margin-top: auto; }
+      .btn-outline { background: transparent; border: 1px solid #2c2c3e; color: #9898b0; }
+      .btn-fill { background: #e8fb61; color: #0e0e14; }
+    </style></head><body>
+    <div class="cards">
+      <div class="card">
+        <div class="plan">Free</div>
+        <div class="price">$0<span>/mo</span></div>
+        <ul class="features">
+          <li>3 projects</li><li>1 GB storage</li><li>Basic support</li>
+        </ul>
+        <button class="btn btn-outline">Get Started</button>
+      </div>
+      <div class="card featured">
+        <div class="badge">POPULAR</div>
+        <div class="plan">Pro</div>
+        <div class="price">$12<span>/mo</span></div>
+        <ul class="features">
+          <li>Unlimited projects</li><li>20 GB storage</li><li>Priority support</li><li>Custom domain</li>
+        </ul>
+        <button class="btn btn-fill">Get Pro</button>
+      </div>
+      <div class="card">
+        <div class="plan">Team</div>
+        <div class="price">$39<span>/mo</span></div>
+        <ul class="features">
+          <li>Everything in Pro</li><li>10 seats</li><li>100 GB storage</li>
+        </ul>
+        <button class="btn btn-outline">Contact Us</button>
+      </div>
+    </div>
+    </body></html>`,
+    starterHTML: `<div class="cards">\n  <div class="card">\n    <div class="plan">Free</div>\n    <div class="price">$0<span>/mo</span></div>\n    <ul class="features">\n      <li>3 projects</li>\n      <li>1 GB storage</li>\n      <li>Basic support</li>\n    </ul>\n    <button class="btn btn-outline">Get Started</button>\n  </div>\n  <div class="card featured">\n    <div class="badge">POPULAR</div>\n    <div class="plan">Pro</div>\n    <div class="price">$12<span>/mo</span></div>\n    <ul class="features">\n      <li>Unlimited projects</li>\n      <li>20 GB storage</li>\n      <li>Priority support</li>\n      <li>Custom domain</li>\n    </ul>\n    <button class="btn btn-fill">Get Pro</button>\n  </div>\n  <div class="card">\n    <div class="plan">Team</div>\n    <div class="price">$39<span>/mo</span></div>\n    <ul class="features">\n      <li>Everything in Pro</li>\n      <li>10 seats</li>\n      <li>100 GB storage</li>\n    </ul>\n    <button class="btn btn-outline">Contact Us</button>\n  </div>\n</div>`,
+    starterCSS: `body {\n  background: #0e0e14;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  min-height: 100vh;\n  font-family: sans-serif;\n  padding: 24px;\n}\n\n.cards {\n  /* flex row of cards */\n}\n\n.card {\n  /* dark card with border */\n}\n\n.card.featured {\n  /* highlighted pro card */\n}\n\n.badge {\n  /* popular badge - absolute positioned */\n}\n\n.price {\n  /* big price text */\n}\n\n.features li {\n  /* list item with checkmark */\n}\n\n.btn-fill {\n  /* yellow filled button */\n}`,
+  },
+  {
+    id: 'login',
+    name: 'Login Form',
+    difficulty: 'medium',
+    hint: [
+      'Use <code>display: flex; flex-direction: column; gap: 16px</code> on the form',
+      'Use <code>width: 360px; padding: 40px</code> on the form container',
+      'Style inputs with <code>padding: 12px 16px; border-radius: 8px; background: #0e0e14; border: 1px solid #2c2c3e; color: white</code>',
+      'Use <code>width: 100%</code> on inputs and button to fill the form width',
+      'Remove default input outline with <code>outline: none</code> and add custom focus with <code>:focus { border-color: #61c3fb }</code>',
+      'Separate the header (title + subtitle) from the form fields with margin',
+    ],
+    bottomHint: 'Build a login form with email/password inputs, labels, and a submit button on dark background',
+    target: `<!DOCTYPE html><html><head><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0e0e14; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
+      .form-box { background: #1d1d2a; border: 1px solid #2c2c3e; border-radius: 20px; padding: 40px; width: 360px; }
+      h2 { color: #ddddf0; font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+      .sub { color: #6b6b88; font-size: 13px; margin-bottom: 28px; }
+      .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+      label { font-size: 12px; font-weight: 700; color: #9898b0; letter-spacing: 0.5px; }
+      input { padding: 12px 16px; background: #0e0e14; border: 1px solid #2c2c3e; border-radius: 8px; color: #ddddf0; font-size: 14px; outline: none; width: 100%; }
+      input:focus { border-color: #61c3fb; }
+      .forgot { font-size: 12px; color: #61c3fb; text-decoration: none; text-align: right; display: block; margin-top: -8px; margin-bottom: 24px; }
+      .submit { width: 100%; padding: 13px; background: #61c3fb; color: #0e0e14; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+      .register { text-align: center; margin-top: 20px; font-size: 12px; color: #6b6b88; }
+      .register a { color: #e8fb61; text-decoration: none; font-weight: 700; }
+    </style></head><body>
+    <div class="form-box">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in to your account</p>
+      <div class="field"><label>EMAIL</label><input type="email" placeholder="you@example.com"></div>
+      <div class="field"><label>PASSWORD</label><input type="password" placeholder="••••••••"></div>
+      <a href="#" class="forgot">Forgot password?</a>
+      <button class="submit">Sign In</button>
+      <p class="register">No account? <a href="#">Sign up free</a></p>
+    </div>
+    </body></html>`,
+    starterHTML: `<div class="form-box">\n  <h2>Welcome back</h2>\n  <p class="sub">Sign in to your account</p>\n  <div class="field">\n    <label>EMAIL</label>\n    <input type="email" placeholder="you@example.com">\n  </div>\n  <div class="field">\n    <label>PASSWORD</label>\n    <input type="password" placeholder="••••••••">\n  </div>\n  <a href="#" class="forgot">Forgot password?</a>\n  <button class="submit">Sign In</button>\n  <p class="register">No account? <a href="#">Sign up free</a></p>\n</div>`,
+    starterCSS: `body {\n  background: #0e0e14;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  min-height: 100vh;\n  font-family: sans-serif;\n}\n\n.form-box {\n  /* dark card container */\n}\n\n.field {\n  /* column layout for label + input */\n}\n\ninput {\n  /* dark input styling */\n}\n\n.submit {\n  /* blue full-width button */\n}`,
+  },
+  {
+    id: 'hero',
+    name: 'Hero Section',
+    difficulty: 'hard',
+    hint: [
+      'Build a full-height section with <code>height: 100vh</code> and a dark background',
+      'Use a subtle dot-grid background with <code>radial-gradient</code> in the background-image',
+      'Center everything with <code>display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center</code>',
+      'Make the heading very large: <code>font-size: clamp(40px, 6vw, 72px)</code>',
+      'Use a <code>background: linear-gradient; -webkit-background-clip: text; -webkit-text-fill-color: transparent</code> for gradient text',
+      'Place two buttons side by side using a <code>div.buttons { display:flex; gap:16px }</code>',
+    ],
+    bottomHint: 'Build a full hero section with badge, large gradient heading, subtitle, and two CTA buttons',
+    target: `<!DOCTYPE html><html><head><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: sans-serif; }
+      .hero { background: #0e0e14; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 24px; background-image: radial-gradient(circle, #2c2c3e 1px, transparent 1px); background-size: 32px 32px; }
+      .badge { background: rgba(97,195,251,0.1); border: 1px solid rgba(97,195,251,0.3); color: #61c3fb; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 5px 16px; border-radius: 20px; margin-bottom: 28px; }
+      h1 { font-size: clamp(36px, 6vw, 68px); font-weight: 800; line-height: 1.1; margin-bottom: 20px; background: linear-gradient(135deg, #ddddf0 30%, #6b6b88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; max-width: 700px; }
+      h1 span { background: linear-gradient(135deg, #e8fb61, #61fbaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+      p { color: #6b6b88; font-size: 17px; max-width: 480px; line-height: 1.7; margin-bottom: 36px; }
+      .buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+      .btn-p { background: #e8fb61; color: #0e0e14; padding: 14px 32px; border-radius: 10px; font-weight: 800; font-size: 15px; border: none; cursor: pointer; }
+      .btn-s { background: transparent; color: #ddddf0; padding: 14px 32px; border-radius: 10px; font-weight: 700; font-size: 15px; border: 1px solid #2c2c3e; cursor: pointer; }
+    </style></head><body>
+    <section class="hero">
+      <div class="badge">✦ NOW IN BETA</div>
+      <h1>Build faster with <span>beautiful</span> code</h1>
+      <p>A modern development platform that helps you ship stunning UIs in record time. No design skills needed.</p>
+      <div class="buttons">
+        <button class="btn-p">Start Building Free</button>
+        <button class="btn-s">View Demo →</button>
+      </div>
+    </section>
+    </body></html>`,
+    starterHTML: `<section class="hero">\n  <div class="badge">✦ NOW IN BETA</div>\n  <h1>Build faster with <span>beautiful</span> code</h1>\n  <p>A modern development platform that helps you ship stunning UIs in record time. No design skills needed.</p>\n  <div class="buttons">\n    <button class="btn-p">Start Building Free</button>\n    <button class="btn-s">View Demo →</button>\n  </div>\n</section>`,
+    starterCSS: `body {\n  font-family: sans-serif;\n}\n\n.hero {\n  /* full height, dark, dot grid background */\n  background: #0e0e14;\n  height: 100vh;\n  /* center everything */\n}\n\n.badge {\n  /* subtle blue pill badge */\n}\n\nh1 {\n  /* large gradient heading */\n}\n\nh1 span {\n  /* yellow-green gradient on keyword */\n}\n\np {\n  /* muted subtitle */\n}\n\n.buttons {\n  /* side by side buttons */\n}\n\n.btn-p {\n  /* yellow primary button */\n}\n\n.btn-s {\n  /* ghost secondary button */\n}`,
+  },
+];
+
+let currentChallenge = null;
+let activeTab = 'html';
+let score = 0;
+let hintVisible = false;
+
+function buildTabs() {
+  const container = document.getElementById('challengeTabs');
+  container.innerHTML = '';
+  challenges.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ctab';
+    btn.innerHTML = `${c.name} <span class="diff ${c.difficulty}">${c.difficulty.toUpperCase()}</span>`;
+    btn.onclick = () => loadChallenge(i);
+    container.appendChild(btn);
+  });
+}
+
+function loadChallenge(idx) {
+  currentChallenge = challenges[idx];
+  document.querySelectorAll('.ctab').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.getElementById('htmlEditor').value = currentChallenge.starterHTML;
+  document.getElementById('cssEditor').value = currentChallenge.starterCSS;
+  document.getElementById('hintBar').innerHTML = `<strong>${currentChallenge.name}:</strong> ${currentChallenge.bottomHint}`;
+  document.getElementById('matchPct').textContent = '—';
+  document.getElementById('matchBar').style.width = '0%';
+  hintVisible = false;
+  document.getElementById('hintOverlay').classList.remove('show');
+
+  // Build hint list
+  const hintList = document.getElementById('hintList');
+  hintList.innerHTML = '';
+  currentChallenge.hint.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'hint-item';
+    div.innerHTML = h;
+    hintList.appendChild(div);
+  });
+
+  // Render target
+  const tf = document.getElementById('targetFrame');
+  tf.srcdoc = currentChallenge.target;
+
+  // Clear output
+  document.getElementById('outputFrame').srcdoc = `<html><body style="background:#0e0e14;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#3a3a52;font-size:13px">Click ▶ Run &amp; Check to see your output</body></html>`;
+
+  showToast(`Challenge loaded: ${currentChallenge.name}`, 'info');
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.etab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'html') || (i === 1 && tab === 'css')));
+  document.getElementById('htmlEditor').style.display = tab === 'html' ? 'block' : 'none';
+  document.getElementById('cssEditor').style.display = tab === 'css' ? 'block' : 'none';
+}
+
+function buildOutput() {
+  const html = document.getElementById('htmlEditor').value;
+  const css = document.getElementById('cssEditor').value;
+  return `<!DOCTYPE html><html><head><style>*{margin:0;padding:0;box-sizing:border-box;}${css}</style></head><body>${html}</body></html>`;
+}
+
+function checkAnswer() {
+  if (!currentChallenge) { showToast('Pick a challenge first!', 'error'); return; }
+  const output = buildOutput();
+  document.getElementById('outputFrame').srcdoc = output;
+
+  // Rough scoring: check how many CSS properties user has written
+  const css = document.getElementById('cssEditor').value;
+  const html = document.getElementById('htmlEditor').value;
+  const props = (css.match(/[a-z-]+\s*:/g) || []).length;
+  const hasStructure = html.length > 50;
+  const targetProps = (currentChallenge.target.match(/[a-z-]+\s*:/g) || []).length;
+  const pct = Math.min(100, Math.round((props / Math.max(targetProps * 0.7, 1)) * 100));
+
+  document.getElementById('matchBar').style.width = pct + '%';
+  document.getElementById('matchPct').textContent = pct + '% match';
+
+  if (pct >= 80) {
+    showToast('🎉 Excellent! Great match!', 'success');
+    score += 10;
+  } else if (pct >= 50) {
+    showToast('👍 Good progress! Keep styling', 'info');
+    score += 5;
+  } else if (pct >= 20) {
+    showToast('💪 Keep going! Add more CSS', 'info');
+    score += 2;
+  } else {
+    showToast('🚀 Start adding CSS properties!', 'error');
+  }
+  document.getElementById('scoreVal').textContent = score;
+}
+
+function resetCode() {
+  if (!currentChallenge) return;
+  document.getElementById('htmlEditor').value = currentChallenge.starterHTML;
+  document.getElementById('cssEditor').value = currentChallenge.starterCSS;
+  document.getElementById('matchBar').style.width = '0%';
+  document.getElementById('matchPct').textContent = '—';
+  showToast('Code reset!', 'info');
+}
+
+function toggleHint() {
+  hintVisible = !hintVisible;
+  document.getElementById('hintOverlay').classList.toggle('show', hintVisible);
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Tab key support in editors
+['htmlEditor','cssEditor'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = this.selectionStart, end = this.selectionEnd;
+      this.value = this.value.substring(0,s) + '  ' + this.value.substring(end);
+      this.selectionStart = this.selectionEnd = s + 2;
+    }
+    if (e.ctrlKey && e.key === 'Enter') checkAnswer();
+  });
+});
+
+buildTabs();
+loadChallenge(0);
+</script>
+</body>
+</html>
